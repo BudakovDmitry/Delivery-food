@@ -53,7 +53,7 @@ function notAutorized() {
   function logIn(event) {
     event.preventDefault();
 
-    if (logInInput.value) {
+    if (logInInput.value.trim()) {
       login = logInInput.value;
       localStorage.setItem("user", login);
       toogleModalAuth();
