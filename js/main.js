@@ -53,6 +53,10 @@ function notAutorized() {
     event.preventDefault();
     login = logInInput.value;
 
+    if (login == "") {
+      alert("Введите Имя");
+    }
+
     localStorage.setItem("user", login);
 
     toogleModalAuth();
