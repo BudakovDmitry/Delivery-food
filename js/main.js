@@ -22,6 +22,7 @@ const buttonOut = document.querySelector(".button-out");
 let login = localStorage.getItem("user");
 
 function toogleModalAuth() {
+  logInInput.style.borderColor = "";
   modalAuth.classList.toggle("is-open");
 }
 
@@ -51,20 +52,19 @@ function notAutorized() {
   console.log("Не авторизован");
   function logIn(event) {
     event.preventDefault();
-    login = logInInput.value;
 
-    if (login == "") {
-      alert("Введите Имя");
+    if (logInInput.value) {
+      login = logInInput.value;
+      localStorage.setItem("user", login);
+      toogleModalAuth();
+      buttonAuth.removeEventListener("click", toogleModalAuth);
+      closeAuth.removeEventListener("click", toogleModalAuth);
+      logInForm.removeEventListener("submit", logIn);
+      logInForm.reset();
+      checkAuth();
+    } else {
+      logInInput.style.borderColor = "red";
     }
-
-    localStorage.setItem("user", login);
-
-    toogleModalAuth();
-    buttonAuth.removeEventListener("click", toogleModalAuth);
-    closeAuth.removeEventListener("click", toogleModalAuth);
-    logInForm.removeEventListener("submit", logIn);
-    logInForm.reset();
-    checkAuth();
   }
 
   buttonAuth.addEventListener("click", toogleModalAuth);
