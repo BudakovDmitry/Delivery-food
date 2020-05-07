@@ -19,9 +19,15 @@ const cardsMenu = document.querySelector(".cards-menu");
 
 let login = localStorage.getItem("user");
 
-function toggleModal() {
+const valid = function (str) {
+  const nameReg = /^[a-zA-Z][a-zA-Z0-9-_\.]{1,20}$/;
+  return nameReg.test(str);
+};
+valid();
+
+const toggleModal = function () {
   modal.classList.toggle("is-open");
-}
+};
 
 function toogleModalAuth() {
   logInInput.style.borderColor = "";
@@ -55,7 +61,7 @@ function notAutorized() {
   function logIn(event) {
     event.preventDefault();
 
-    if (logInInput.value.trim()) {
+    if (valid(logInInput.value.trim)) {
       login = logInInput.value;
       localStorage.setItem("user", login);
       toogleModalAuth();
@@ -66,6 +72,7 @@ function notAutorized() {
       checkAuth();
     } else {
       logInInput.style.borderColor = "red";
+      logInInput.value = "";
     }
   }
 
@@ -145,15 +152,17 @@ function openGoods(event) {
   const restaurant = target.closest(".card-restaurant");
 
   if (restaurant) {
-    containerPromo.classList.add("hide");
-    restaurants.classList.add("hide");
-    menu.classList.remove("hide");
-
-    cardsMenu.textContent = "";
-
-    createCardGood();
-    createCardGood();
-    createCardGood();
+    if (login) {
+      containerPromo.classList.add("hide");
+      restaurants.classList.add("hide");
+      menu.classList.remove("hide");
+      cardsMenu.textContent = "";
+      createCardGood();
+      createCardGood();
+      createCardGood();
+    } else {
+      toogleModalAuth();
+    }
   }
 }
 
@@ -168,9 +177,16 @@ logo.addEventListener("click", function () {
   restaurants.classList.remove("hide");
   menu.classList.add("hide");
 });
-
+ 
 checkAuth();
 
 createCardRestaurant();
 createCardRestaurant();
 createCardRestaurant();
+
+new Swiper(".swiper-container", {
+  loop: true,
+  autoplay: true,
+  slidesPerView: 1,
+  slidesPerColumn: 1,
+});
