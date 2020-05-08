@@ -16,8 +16,24 @@ const restaurants = document.querySelector(".restaurants");
 const menu = document.querySelector(".menu");
 const logo = document.querySelector(".logo");
 const cardsMenu = document.querySelector(".cards-menu");
+const restaurantTitle = document.querySelector(".restaurant-title");
+const rating = document.querySelector(".rating");
+const minPrice = document.querySelector(".price");
+const category = document.querySelector(".category");
 
 let login = localStorage.getItem("user");
+
+const getData = async function (url) {
+  const response = await window.fetch(url);
+  if (!response.ok) {
+    throw new Error(
+      `Ошибка по адресу ${url}, статус ошибки ${response.status}!`
+    );
+  }
+  return await response.json();
+};
+
+getData("./db/partners.json");
 
 const valid = function (str) {
   const nameReg = /^[a-zA-Z][a-zA-Z0-9-_\.]{1,20}$/;
@@ -29,10 +45,12 @@ const toggleModal = function () {
   modal.classList.toggle("is-open");
 };
 
-function toogleModalAuth() {
+const ggleModalAuth = function () {
   logInInput.style.borderColor = "";
   modalAuth.classList.toggle("is-open");
-}
+};
+
+// toogleModalAuth();
 
 function autorized() {
   function logOut() {
@@ -61,12 +79,12 @@ function notAutorized() {
   function logIn(event) {
     event.preventDefault();
 
-    if (valid(logInInput.value.trim)) {
+    if (valid(logInInput.value)) {
       login = logInInput.value;
       localStorage.setItem("user", login);
-      toogleModalAuth();
-      buttonAuth.removeEventListener("click", toogleModalAuth);
-      closeAuth.removeEventListener("click", toogleModalAuth);
+      toggleModalAuth();
+      buttonAuth.removeEventListener("click", toggleModalAuth);
+      closeAuth.removeEventListener("click", toggleModalAuth);
       logInForm.removeEventListener("submit", logIn);
       logInForm.reset();
       checkAuth();
@@ -76,8 +94,8 @@ function notAutorized() {
     }
   }
 
-  buttonAuth.addEventListener("click", toogleModalAuth);
-  closeAuth.addEventListener("click", toogleModalAuth);
+  buttonAuth.addEventListener("click", toggleModalAuth);
+  closeAuth.addEventListener("click", toggleModalAuth);
   logInForm.addEventListener("submit", logIn);
 }
 
@@ -89,21 +107,29 @@ function checkAuth() {
   }
 }
 
-function createCardRestaurant() {
+function createCardRestaurant({
+  image,
+  kitchen,
+  name,
+  price,
+  stars,
+  products,
+  time_of_delivery: timeOfDelivery,
+}) {
   const card = `
-  <a class="card card-restaurant">
-    <img src="img/tanuki/preview.jpg" alt="image" class="card-image"/>
+  <a class="card card-restaurant" data-products="${products}">
+    <img src="${image}" alt="image" class="card-image"/>
     <div class="card-text">
       <div class="card-heading">
-        <h3 class="card-title">Тануки</h3>
-        <span class="card-tag tag">60 мин</span>
+        <h3 class="card-title">${name}</h3>
+        <span class="card-tag tag">${timeOfDelivery} мин</span>
       </div>
       <div class="card-info">
         <div class="rating">
-          4.5
+          ${stars}
         </div>
-        <div class="price">От 1 200 ₽</div>
-        <div class="category">Суши, роллы</div>
+        <div class="price">От ${price} UAH</div>
+        <div class="category">${kitchen}</div>
         </div>
     </div>
   </a>
@@ -112,33 +138,26 @@ function createCardRestaurant() {
   cardsRestaurants.insertAdjacentHTML("beforeend", card);
 }
 
-function createCardGood() {
+function createCardGood({ description, image, name, price }) {
   const card = document.createElement("div");
   card.className = "card";
-
   card.insertAdjacentHTML(
     "beforeend",
     `
-  <img src="img/pizza-plus/pizza-classic.jpg"
-    alt="image"
-    class="card-image"
-  />
+  <img src="${image}" alt="${name}" class="card-image">
   <div class="card-text">
     <div class="card-heading">
-      <h3 class="card-title card-title-reg">Пицца Классика</h3>
+      <h3 class="card-title card-title-reg">${name}</h3>
     </div>
     <div class="card-info">
-      <div class="ingredients">
-        Соус томатный, сыр «Моцарелла», сыр «Пармезан», ветчина,
-        салями, грибы.
-      </div>
+      <div class="ingredients">${description}</div>
     </div>
     <div class="card-buttons">
       <button class="button button-primary button-add-cart">
         <span class="button-card-text">В корзину</span>
         <span class="button-cart-svg"></span>
       </button>
-      <strong class="card-price-bold">510 ₽</strong>
+      <strong class="card-price-bold">${price} ₽</strong>
     </div>
   </div>
   `
@@ -148,45 +167,51 @@ function createCardGood() {
 
 function openGoods(event) {
   const target = event.target;
+  if (login) {
+    const restaurant = target.closest(".card-restaurant");
 
-  const restaurant = target.closest(".card-restaurant");
-
-  if (restaurant) {
-    if (login) {
+    if (restaurant) {
       containerPromo.classList.add("hide");
       restaurants.classList.add("hide");
       menu.classList.remove("hide");
+
+      restaurantTitle.textContent = "";
+      rating.textContent = "";
+      minPrice.textContent = "";
+      category.textContent = "";
       cardsMenu.textContent = "";
-      createCardGood();
-      createCardGood();
-      createCardGood();
-    } else {
-      toogleModalAuth();
+      getData(`./db/${restaurant.dataset.products}`).then(function (data) {
+        data.forEach(createCardGood);
+      });
     }
+  } else {
+    toggleModalAuth();
   }
 }
 
-cartButton.addEventListener("click", toggleModal);
+function init() {
+  getData("./db/partners.json").then(function (data) {
+    data.forEach(createCardRestaurant);
+  });
 
-close.addEventListener("click", toggleModal);
+  cartButton.addEventListener("click", toggleModal);
 
-cardsRestaurants.addEventListener("click", openGoods);
+  close.addEventListener("click", toggleModal);
 
-logo.addEventListener("click", function () {
-  containerPromo.classList.remove("hide");
-  restaurants.classList.remove("hide");
-  menu.classList.add("hide");
-});
- 
-checkAuth();
+  cardsRestaurants.addEventListener("click", openGoods);
 
-createCardRestaurant();
-createCardRestaurant();
-createCardRestaurant();
+  logo.addEventListener("click", function () {
+    containerPromo.classList.remove("hide");
+    restaurants.classList.remove("hide");
+    menu.classList.add("hide");
+  });
 
-new Swiper(".swiper-container", {
-  loop: true,
-  autoplay: true,
-  slidesPerView: 1,
-  slidesPerColumn: 1,
-});
+  checkAuth();
+
+  new Swiper(".swiper-container", {
+    loop: true,
+    autoplay: true,
+  });
+}
+
+init();
